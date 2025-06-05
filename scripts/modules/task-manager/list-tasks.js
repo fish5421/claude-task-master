@@ -423,56 +423,74 @@ function listTasks(
 		const idWidthPct = withSubtasks ? 10 : 7;
 
 		// Calculate max status length to accommodate "in-progress"
-		const statusWidthPct = 15;
+                const statusWidthPct = 8;
 
-		// Increase priority column width as requested
-		const priorityWidthPct = 12;
+                const priorityWidthPct = 7;
 
-		// Make dependencies column smaller as requested (-20%)
-		const depsWidthPct = 20;
+                const ownerWidthPct = 10;
+                const impactWidthPct = 12;
+                const createdWidthPct = 11;
+                const updatedWidthPct = 11;
 
-		const complexityWidthPct = 10;
+                const depsWidthPct = 15;
 
-		// Calculate title/description width as remaining space (+20% from dependencies reduction)
-		const titleWidthPct =
-			100 -
-			idWidthPct -
-			statusWidthPct -
-			priorityWidthPct -
-			depsWidthPct -
-			complexityWidthPct;
+                const complexityWidthPct = 6;
+
+                const titleWidthPct =
+                        100 -
+                        idWidthPct -
+                        statusWidthPct -
+                        priorityWidthPct -
+                        ownerWidthPct -
+                        impactWidthPct -
+                        createdWidthPct -
+                        updatedWidthPct -
+                        depsWidthPct -
+                        complexityWidthPct;
 
 		// Allow 10 characters for borders and padding
 		const availableWidth = terminalWidth - 10;
 
 		// Calculate actual column widths based on percentages
-		const idWidth = Math.floor(availableWidth * (idWidthPct / 100));
-		const statusWidth = Math.floor(availableWidth * (statusWidthPct / 100));
-		const priorityWidth = Math.floor(availableWidth * (priorityWidthPct / 100));
-		const depsWidth = Math.floor(availableWidth * (depsWidthPct / 100));
-		const complexityWidth = Math.floor(
-			availableWidth * (complexityWidthPct / 100)
-		);
-		const titleWidth = Math.floor(availableWidth * (titleWidthPct / 100));
+                const idWidth = Math.floor(availableWidth * (idWidthPct / 100));
+                const statusWidth = Math.floor(availableWidth * (statusWidthPct / 100));
+                const priorityWidth = Math.floor(availableWidth * (priorityWidthPct / 100));
+                const ownerWidth = Math.floor(availableWidth * (ownerWidthPct / 100));
+                const impactWidth = Math.floor(availableWidth * (impactWidthPct / 100));
+                const createdWidth = Math.floor(availableWidth * (createdWidthPct / 100));
+                const updatedWidth = Math.floor(availableWidth * (updatedWidthPct / 100));
+                const depsWidth = Math.floor(availableWidth * (depsWidthPct / 100));
+                const complexityWidth = Math.floor(
+                        availableWidth * (complexityWidthPct / 100)
+                );
+                const titleWidth = Math.floor(availableWidth * (titleWidthPct / 100));
 
 		// Create a table with correct borders and spacing
-		const table = new Table({
-			head: [
-				chalk.cyan.bold('ID'),
-				chalk.cyan.bold('Title'),
-				chalk.cyan.bold('Status'),
-				chalk.cyan.bold('Priority'),
-				chalk.cyan.bold('Dependencies'),
-				chalk.cyan.bold('Complexity')
-			],
-			colWidths: [
-				idWidth,
-				titleWidth,
-				statusWidth,
-				priorityWidth,
-				depsWidth,
-				complexityWidth // Added complexity column width
-			],
+                const table = new Table({
+                        head: [
+                                chalk.cyan.bold('ID'),
+                                chalk.cyan.bold('Title'),
+                                chalk.cyan.bold('Status'),
+                                chalk.cyan.bold('Priority'),
+                                chalk.cyan.bold('Owner'),
+                                chalk.cyan.bold('Impact'),
+                                chalk.cyan.bold('Created'),
+                                chalk.cyan.bold('Updated'),
+                                chalk.cyan.bold('Dependencies'),
+                                chalk.cyan.bold('Complexity')
+                        ],
+                        colWidths: [
+                                idWidth,
+                                titleWidth,
+                                statusWidth,
+                                priorityWidth,
+                                ownerWidth,
+                                impactWidth,
+                                createdWidth,
+                                updatedWidth,
+                                depsWidth,
+                                complexityWidth
+                        ],
 			style: {
 				head: [], // No special styling for header
 				border: [], // No special styling for border
@@ -513,16 +531,20 @@ function listTasks(
 			const status = getStatusWithColor(task.status, true);
 
 			// Add the row without truncating dependencies
-			table.push([
-				task.id.toString(),
-				truncate(cleanTitle, titleWidth - 3),
-				status,
-				priorityColor(truncate(task.priority || 'medium', priorityWidth - 2)),
-				depText,
-				task.complexityScore
-					? getComplexityWithColor(task.complexityScore)
-					: chalk.gray('N/A')
-			]);
+                        table.push([
+                                task.id.toString(),
+                                truncate(cleanTitle, titleWidth - 3),
+                                status,
+                                priorityColor(truncate(task.priority || 'medium', priorityWidth - 2)),
+                                task.owner || chalk.gray('N/A'),
+                                task.impactSet && task.impactSet.length > 0 ? task.impactSet.join(',') : chalk.gray('None'),
+                                task.createdAt ? task.createdAt.split('T')[0] : chalk.gray('N/A'),
+                                task.updatedAt ? task.updatedAt.split('T')[0] : chalk.gray('N/A'),
+                                depText,
+                                task.complexityScore
+                                        ? getComplexityWithColor(task.complexityScore)
+                                        : chalk.gray('N/A')
+                        ]);
 
 			// Add subtasks if requested
 			if (withSubtasks && task.subtasks && task.subtasks.length > 0) {

@@ -286,13 +286,18 @@ Guidelines:
 		const processedNewTasks = generatedData.tasks.map((task) => {
 			const newId = currentId++;
 			taskMap.set(task.id, newId);
+			const timestamp = new Date().toISOString();
 			return {
 				...task,
 				id: newId,
 				status: 'pending',
 				priority: task.priority || 'medium',
 				dependencies: Array.isArray(task.dependencies) ? task.dependencies : [],
-				subtasks: []
+				subtasks: [],
+				owner: null,
+				impactSet: [],
+				createdAt: timestamp,
+				updatedAt: timestamp
 			};
 		});
 

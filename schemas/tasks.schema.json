@@ -1,0 +1,56 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "TaskMaster Tasks",
+	"type": "object",
+	"properties": {
+		"version": { "type": "integer", "enum": [2] },
+		"tasks": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer" },
+					"title": { "type": "string" },
+					"description": { "type": "string" },
+					"status": {
+						"type": "string",
+						"enum": ["pending", "in_progress", "done", "deferred", "failed"]
+					},
+					"owner": { "type": ["string", "null"] },
+					"impactSet": {
+						"type": "array",
+						"items": { "type": "string" }
+					},
+					"dependencies": {
+						"type": "array",
+						"items": { "type": "integer" }
+					},
+					"priority": { "type": "string" },
+					"details": { "type": "string" },
+					"testStrategy": { "type": "string" },
+					"subtasks": { "type": "array" },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				},
+				"required": [
+					"id",
+					"title",
+					"description",
+					"status",
+					"owner",
+					"impactSet",
+					"dependencies",
+					"priority",
+					"details",
+					"testStrategy",
+					"subtasks",
+					"createdAt",
+					"updatedAt"
+				],
+				"additionalProperties": false
+			}
+		}
+	},
+	"required": ["version", "tasks"],
+	"additionalProperties": false
+}

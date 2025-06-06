@@ -26,14 +26,16 @@ import {
  * @param {string} reportPath - Path to the complexity report
  * @param {boolean} withSubtasks - Whether to show subtasks
  * @param {string} outputFormat - Output format (text or json)
+ * @param {boolean} detailed - Show extra metadata columns
  * @returns {Object} - Task list result for json format
  */
 function listTasks(
-	tasksPath,
-	statusFilter,
-	reportPath = null,
-	withSubtasks = false,
-	outputFormat = 'text'
+        tasksPath,
+        statusFilter,
+        reportPath = null,
+        withSubtasks = false,
+        outputFormat = 'text',
+        detailed = false
 ) {
 	try {
 		// Only display banner for text output
@@ -415,69 +417,74 @@ function listTasks(
 			return;
 		}
 
-		// COMPLETELY REVISED TABLE APPROACH
-		// Define percentage-based column widths and calculate actual widths
-		// Adjust percentages based on content type and user requirements
+                // Column width percentages
+                const idWidthPct = withSubtasks ? 9 : 6;
+                const statusWidthPct = 7;
+                const priorityWidthPct = 6;
+                const ownerWidthPct = detailed ? 7 : 0;
+                const impactWidthPct = detailed ? 8 : 0;
+                const createdWidthPct = detailed ? 7 : 0;
+                const updatedWidthPct = detailed ? 7 : 0;
+                const depsWidthPct = 12;
+                const complexityWidthPct = 5;
 
-		// Adjust ID width if showing subtasks (subtask IDs are longer: e.g., "1.2")
-		const idWidthPct = withSubtasks ? 10 : 7;
-
-		// Calculate max status length to accommodate "in-progress"
-		const statusWidthPct = 15;
-
-		// Increase priority column width as requested
-		const priorityWidthPct = 12;
-
-		// Make dependencies column smaller as requested (-20%)
-		const depsWidthPct = 20;
-
-		const complexityWidthPct = 10;
-
-		// Calculate title/description width as remaining space (+20% from dependencies reduction)
-		const titleWidthPct =
-			100 -
-			idWidthPct -
-			statusWidthPct -
-			priorityWidthPct -
-			depsWidthPct -
-			complexityWidthPct;
+                const titleWidthPct =
+                        100 -
+                        idWidthPct -
+                        statusWidthPct -
+                        priorityWidthPct -
+                        ownerWidthPct -
+                        impactWidthPct -
+                        createdWidthPct -
+                        updatedWidthPct -
+                        depsWidthPct -
+                        complexityWidthPct;
 
 		// Allow 10 characters for borders and padding
 		const availableWidth = terminalWidth - 10;
 
 		// Calculate actual column widths based on percentages
-		const idWidth = Math.floor(availableWidth * (idWidthPct / 100));
-		const statusWidth = Math.floor(availableWidth * (statusWidthPct / 100));
-		const priorityWidth = Math.floor(availableWidth * (priorityWidthPct / 100));
-		const depsWidth = Math.floor(availableWidth * (depsWidthPct / 100));
-		const complexityWidth = Math.floor(
-			availableWidth * (complexityWidthPct / 100)
-		);
-		const titleWidth = Math.floor(availableWidth * (titleWidthPct / 100));
+                const idWidth = Math.floor(availableWidth * (idWidthPct / 100));
+                const statusWidth = Math.floor(availableWidth * (statusWidthPct / 100));
+                const priorityWidth = Math.floor(availableWidth * (priorityWidthPct / 100));
+                const ownerWidth = Math.floor(availableWidth * (ownerWidthPct / 100));
+                const impactWidth = Math.floor(availableWidth * (impactWidthPct / 100));
+                const createdWidth = Math.floor(availableWidth * (createdWidthPct / 100));
+                const updatedWidth = Math.floor(availableWidth * (updatedWidthPct / 100));
+                const depsWidth = Math.floor(availableWidth * (depsWidthPct / 100));
+                const complexityWidth = Math.floor(
+                        availableWidth * (complexityWidthPct / 100)
+                );
+                const titleWidth = Math.floor(availableWidth * (titleWidthPct / 100));
 
 		// Create a table with correct borders and spacing
-		const table = new Table({
-			head: [
-				chalk.cyan.bold('ID'),
-				chalk.cyan.bold('Title'),
-				chalk.cyan.bold('Status'),
-				chalk.cyan.bold('Priority'),
-				chalk.cyan.bold('Dependencies'),
-				chalk.cyan.bold('Complexity')
-			],
-			colWidths: [
-				idWidth,
-				titleWidth,
-				statusWidth,
-				priorityWidth,
-				depsWidth,
-				complexityWidth // Added complexity column width
-			],
-			style: {
-				head: [], // No special styling for header
-				border: [], // No special styling for border
-				compact: false // Use default spacing
-			},
+                const tableHeaders = [
+                        chalk.cyan.bold('ID'),
+                        chalk.cyan.bold('Title'),
+                        chalk.cyan.bold('Status'),
+                        chalk.cyan.bold('Priority')
+                ];
+                const widthList = [idWidth, titleWidth, statusWidth, priorityWidth];
+                if (detailed) {
+                        tableHeaders.push(
+                                chalk.cyan.bold('Owner'),
+                                chalk.cyan.bold('Impact'),
+                                chalk.cyan.bold('Created'),
+                                chalk.cyan.bold('Updated')
+                        );
+                        widthList.push(ownerWidth, impactWidth, createdWidth, updatedWidth);
+                }
+                tableHeaders.push(chalk.cyan.bold('Dependencies'), chalk.cyan.bold('Complexity'));
+                widthList.push(depsWidth, complexityWidth);
+
+                const table = new Table({
+                        head: tableHeaders,
+                        colWidths: widthList,
+                        style: {
+                                head: [], // No special styling for header
+                                border: [], // No special styling for border
+                                compact: false // Use default spacing
+                        },
 			wordWrap: true,
 			wrapOnWordBoundary: true
 		});
@@ -511,18 +518,30 @@ function listTasks(
 
 			// Format status
 			const status = getStatusWithColor(task.status, true);
-
-			// Add the row without truncating dependencies
-			table.push([
-				task.id.toString(),
-				truncate(cleanTitle, titleWidth - 3),
-				status,
-				priorityColor(truncate(task.priority || 'medium', priorityWidth - 2)),
-				depText,
-				task.complexityScore
-					? getComplexityWithColor(task.complexityScore)
-					: chalk.gray('N/A')
-			]);
+			
+			const row = [
+			task.id.toString(),
+			truncate(cleanTitle, titleWidth - 3),
+			status,
+			priorityColor(truncate(task.priority || 'medium', priorityWidth - 2))
+			];
+			if (detailed) {
+			row.push(
+			task.owner || chalk.gray('N/A'),
+			task.impactSet && task.impactSet.length > 0
+			? truncate(task.impactSet.join(','), impactWidth - 2)
+			: chalk.gray('None'),
+			task.createdAt ? task.createdAt.split('T')[0] : chalk.gray('N/A'),
+			task.updatedAt ? task.updatedAt.split('T')[0] : chalk.gray('N/A')
+			);
+			}
+			row.push(
+			depText,
+			task.complexityScore
+			? getComplexityWithColor(task.complexityScore)
+			: chalk.gray('N/A')
+			);
+			table.push(row);
 
 			// Add subtasks if requested
 			if (withSubtasks && task.subtasks && task.subtasks.length > 0) {
@@ -578,17 +597,22 @@ function listTasks(
 						subtaskDepText = formattedDeps || chalk.gray('None');
 					}
 
-					// Add the subtask row without truncating dependencies
-					table.push([
-						`${task.id}.${subtask.id}`,
-						chalk.dim(`└─ ${truncate(subtask.title, titleWidth - 5)}`),
-						getStatusWithColor(subtask.status, true),
-						chalk.dim('-'),
-						subtaskDepText,
-						subtask.complexityScore
-							? chalk.gray(`${subtask.complexityScore}`)
-							: chalk.gray('N/A')
-					]);
+		                 const subRow = [
+			   `${task.id}.${subtask.id}`,
+			   chalk.dim(`└─ ${truncate(subtask.title, titleWidth - 5)}`),
+			   getStatusWithColor(subtask.status, true),
+			   chalk.dim('-')
+		                 ];
+		                 if (detailed) {
+			   subRow.push(chalk.dim('-'), chalk.dim('-'), chalk.dim('-'), chalk.dim('-'));
+		                 }
+		                 subRow.push(
+			   subtaskDepText,
+			   subtask.complexityScore
+			           ? chalk.gray(`${subtask.complexityScore}`)
+			           : chalk.gray('N/A')
+		                 );
+		                 table.push(subRow);
 				});
 			}
 		});

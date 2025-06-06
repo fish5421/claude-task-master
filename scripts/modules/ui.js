@@ -833,17 +833,26 @@ async function displayNextTask(tasksPath, complexityReportPath = null) {
 
 	// Add task details to table
 	taskTable.push(
-		[chalk.cyan.bold('ID:'), nextTask.id.toString()],
-		[chalk.cyan.bold('Title:'), nextTask.title],
-		[
-			chalk.cyan.bold('Priority:'),
-			priorityColor(nextTask.priority || 'medium')
-		],
-		[
-			chalk.cyan.bold('Dependencies:'),
-			formatDependenciesWithStatus(
-				nextTask.dependencies,
-				data.tasks,
+                [chalk.cyan.bold('ID:'), nextTask.id.toString()],
+                [chalk.cyan.bold('Title:'), nextTask.title],
+                [
+                        chalk.cyan.bold('Priority:'),
+                        priorityColor(nextTask.priority || 'medium')
+                ],
+                [chalk.cyan.bold('Owner:'), nextTask.owner || chalk.gray('N/A')],
+                [
+                        chalk.cyan.bold('Impact:'),
+                        nextTask.impactSet && nextTask.impactSet.length > 0
+                                ? nextTask.impactSet.join(',')
+                                : chalk.gray('None')
+                ],
+                [chalk.cyan.bold('Created:'), nextTask.createdAt ? nextTask.createdAt.split('T')[0] : chalk.gray('N/A')],
+                [chalk.cyan.bold('Updated:'), nextTask.updatedAt ? nextTask.updatedAt.split('T')[0] : chalk.gray('N/A')],
+                [
+                        chalk.cyan.bold('Dependencies:'),
+                        formatDependenciesWithStatus(
+                                nextTask.dependencies,
+                                data.tasks,
 				true,
 				complexityReport
 			)
@@ -1187,17 +1196,26 @@ async function displayTaskById(
 		priorityColors[task.priority || 'medium'] || chalk.white;
 	taskTable.push(
 		[chalk.cyan.bold('ID:'), task.id.toString()],
-		[chalk.cyan.bold('Title:'), task.title],
-		[
-			chalk.cyan.bold('Status:'),
-			getStatusWithColor(task.status || 'pending', true)
-		],
-		[chalk.cyan.bold('Priority:'), priorityColor(task.priority || 'medium')],
-		[
-			chalk.cyan.bold('Dependencies:'),
-			formatDependenciesWithStatus(
-				task.dependencies,
-				data.tasks,
+                [chalk.cyan.bold('Title:'), task.title],
+                [
+                        chalk.cyan.bold('Status:'),
+                        getStatusWithColor(task.status || 'pending', true)
+                ],
+                [chalk.cyan.bold('Priority:'), priorityColor(task.priority || 'medium')],
+                [chalk.cyan.bold('Owner:'), task.owner || chalk.gray('N/A')],
+                [
+                        chalk.cyan.bold('Impact:'),
+                        task.impactSet && task.impactSet.length > 0
+                                ? task.impactSet.join(',')
+                                : chalk.gray('None')
+                ],
+                [chalk.cyan.bold('Created:'), task.createdAt ? task.createdAt.split('T')[0] : chalk.gray('N/A')],
+                [chalk.cyan.bold('Updated:'), task.updatedAt ? task.updatedAt.split('T')[0] : chalk.gray('N/A')],
+                [
+                        chalk.cyan.bold('Dependencies:'),
+                        formatDependenciesWithStatus(
+                                task.dependencies,
+                                data.tasks,
 				true,
 				complexityReport
 			)

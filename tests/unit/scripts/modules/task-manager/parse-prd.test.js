@@ -205,10 +205,10 @@ describe('parsePRD', () => {
 		// Verify directory check
 		expect(fs.default.existsSync).toHaveBeenCalledWith('tasks');
 
-		// Verify writeJSON was called with the correct arguments
+		// Verify writeJSON was called with the correct path and object
 		expect(writeJSON).toHaveBeenCalledWith(
 			'tasks/tasks.json',
-			sampleClaudeResponse
+			expect.objectContaining({ tasks: expect.any(Array) })
 		);
 
 		// Verify generateTaskFiles was called
@@ -310,7 +310,7 @@ describe('parsePRD', () => {
 		// Verify the file was written after force overwrite
 		expect(writeJSON).toHaveBeenCalledWith(
 			'tasks/tasks.json',
-			sampleClaudeResponse
+			expect.objectContaining({ tasks: expect.any(Array) })
 		);
 	});
 
@@ -389,7 +389,7 @@ describe('parsePRD', () => {
 		// Verify the file was written without confirmation
 		expect(writeJSON).toHaveBeenCalledWith(
 			'tasks/tasks.json',
-			sampleClaudeResponse
+			expect.objectContaining({ tasks: expect.any(Array) })
 		);
 	});
 
@@ -458,5 +458,24 @@ describe('parsePRD', () => {
 
 		// Verify prompt was NOT called with append flag
 		expect(promptYesNo).not.toHaveBeenCalled();
+	});
+
+	test('should populate new metadata fields with defaults', async () => {
+		fs.default.existsSync.mockImplementation((path) => {
+			if (path === 'tasks/tasks.json') return false;
+			if (path === 'tasks') return true;
+			return false;
+		});
+
+		await parsePRD('path/to/prd.txt', 'tasks/tasks.json', 2);
+
+		const writtenData = writeJSON.mock.calls[0][1];
+		const task = writtenData.tasks[0];
+		expect(task.status).toBe('pending');
+		expect(task.owner).toBeNull();
+		expect(Array.isArray(task.impactSet)).toBe(true);
+		expect(task.impactSet.length).toBe(0);
+		expect(typeof task.createdAt).toBe('string');
+		expect(typeof task.updatedAt).toBe('string');
 	});
 });

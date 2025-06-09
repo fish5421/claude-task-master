@@ -126,9 +126,15 @@ class Coordinator:
         data = {
             "tasks": [dataclasses.asdict(t) for t in self.tasks.values()]
         }
-        with open(tmp, "w") as f:
-            json.dump(data, f, indent=2)
-        os.replace(tmp, self.tasks_path)
+        try:
+            with open(tmp, "w") as f:
+                json.dump(data, f, indent=2)
+            os.replace(tmp, self.tasks_path)
+        except (IOError, OSError) as e:
+            # Clean up temp file on failure
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+            raise RuntimeError(f"Failed to flush tasks to {self.tasks_path}: {e}")
 
     def _emit_event(self, event: str, task_id: str, agent_id: str, success: bool | None = None) -> None:
         payload = {"event": event, "task_id": task_id, "agent_id": agent_id}

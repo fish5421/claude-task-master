@@ -136,7 +136,7 @@ class Coordinator:
                 os.unlink(tmp)
             raise RuntimeError(f"Failed to flush tasks to {self.tasks_path}: {e}")
 
-    def _emit_event(self, event: str, task_id: str, agent_id: str, success: bool | None = None) -> None:
+    def _emit_event(self, event: str, task_id: str, agent_id: str, success: Optional[bool] = None) -> None:
         payload = {"event": event, "task_id": task_id, "agent_id": agent_id}
         if success is not None:
             payload["success"] = success

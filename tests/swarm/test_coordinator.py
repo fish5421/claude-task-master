@@ -148,6 +148,57 @@ class CoordinatorTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.coordinator.mark_done(tasks[0].id, "agent")
 
+    def test_missing_dependency_raises(self):
+        data = {
+            "tasks": [
+                {
+                    "id": "1",
+                    "dependencies": ["99"],
+                    "priority": "high",
+                    "createdAt": "2024-01-01T00:00:00Z",
+                    "impactSet": [],
+                    "status": "pending",
+                }
+            ]
+        }
+        with open(self.tasks_path, "w") as f:
+            json.dump(data, f)
+        with self.assertRaises(ValueError):
+            self.coordinator.load_tasks(self.tasks_path)
+
+    def test_recalculate_when_block_count_missing(self):
+        data = {
+            "tasks": [
+                {
+                    "id": "1",
+                    "dependencies": [],
+                    "priority": "high",
+                    "createdAt": "2024-01-01T00:00:00Z",
+                    "impactSet": ["A"],
+                    "status": "pending",
+                },
+                {
+                    "id": "2",
+                    "dependencies": ["1"],
+                    "priority": "medium",
+                    "createdAt": "2024-01-02T00:00:00Z",
+                    "impactSet": ["B"],
+                    "status": "pending",
+                },
+            ]
+        }
+        with open(self.tasks_path, "w") as f:
+            json.dump(data, f)
+        self.coordinator.load_tasks(self.tasks_path)
+        # simulate corruption
+        del self.coordinator.blocked_count["2"]
+        ready = self.coordinator.pick_tasks(1)
+        self.coordinator.mark_in_progress(ready[0].id, "agent")
+        self.coordinator.mark_done(ready[0].id, "agent")
+        self.assertIn("2", self.coordinator.blocked_count)
+        next_ready = self.coordinator.pick_tasks(1)
+        self.assertEqual(next_ready[0].id, "2")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -63,7 +63,9 @@ class Coordinator:
             count = 0
             for dep in task.dependencies:
                 dep_task = self.tasks.get(dep)
-                if dep_task and dep_task.status != "done":
+                if not dep_task:
+                    raise ValueError(f"Missing dependency: {dep}")
+                if dep_task.status != "done":
                     count += 1
             self.blocked_count[task.id] = count
 
@@ -75,7 +77,6 @@ class Coordinator:
                 heapq.heappush(
                     self.ready_heap, (priority, task.createdAt, task.id)
                 )
-        heapq.heapify(self.ready_heap)
 
     def pick_tasks(self, n: int) -> List[Task]:
         picked: List[Task] = []
@@ -114,7 +115,9 @@ class Coordinator:
         for p in task.impactSet:
             self.locked_paths.discard(p)
         for dep_id in self.dependents.get(task_id, []):
-            self.blocked_count[dep_id] = max(0, self.blocked_count.get(dep_id, 1) - 1)
+            if dep_id not in self.blocked_count:
+                self._recalculate_blocked()
+            self.blocked_count[dep_id] = max(0, self.blocked_count[dep_id] - 1)
             dep_task = self.tasks[dep_id]
             if dep_task.status == "pending" and self.blocked_count[dep_id] == 0:
                 priority = PRIORITY_ORDER.get(dep_task.priority, 1)

@@ -106,7 +106,7 @@ class Coordinator:
         for p in task.impactSet:
             self.locked_paths.discard(p)
         for dep_id in self.dependents.get(task_id, []):
-            self.blocked_count[dep_id] = max(0, self.blocked_count.get(dep_id, 1) - 1)
+            self.blocked_count[dep_id] = max(0, self.blocked_count.get(dep_id, 0) - 1)
             dep_task = self.tasks[dep_id]
             if dep_task.status == "pending" and self.blocked_count[dep_id] == 0:
                 priority = PRIORITY_ORDER.get(dep_task.priority, 1)

@@ -37,8 +37,11 @@ class Coordinator:
 
     def load_tasks(self, path: str) -> None:
         self.tasks_path = path
-        with open(path, "r") as f:
-            data = json.load(f)
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            raise ValueError(f"Failed to load tasks from {path}: {e}")
         self.tasks = {}
         self.dependents = {}
         for raw in data.get("tasks", []):

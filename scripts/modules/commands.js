@@ -1249,13 +1249,15 @@ function registerCommands(programInstance) {
 			'Path to the complexity report file',
 			COMPLEXITY_REPORT_FILE
 		)
-		.option('-s, --status <status>', 'Filter by status')
-		.option('--with-subtasks', 'Show subtasks for each task')
-		.action(async (options) => {
+                .option('-s, --status <status>', 'Filter by status')
+                .option('--with-subtasks', 'Show subtasks for each task')
+                .option('--detailed', 'Show additional metadata columns')
+                .action(async (options) => {
 			const tasksPath = options.file || TASKMASTER_TASKS_FILE;
 			const reportPath = options.report;
 			const statusFilter = options.status;
-			const withSubtasks = options.withSubtasks || false;
+                        const withSubtasks = options.withSubtasks || false;
+                        const detailed = options.detailed || false;
 
 			console.log(chalk.blue(`Listing tasks from: ${tasksPath}`));
 			if (statusFilter) {
@@ -1265,8 +1267,8 @@ function registerCommands(programInstance) {
 				console.log(chalk.blue('Including subtasks in listing'));
 			}
 
-			await listTasks(tasksPath, statusFilter, reportPath, withSubtasks);
-		});
+                        await listTasks(tasksPath, statusFilter, reportPath, withSubtasks, 'text', detailed);
+                });
 
 	// expand command
 	programInstance
